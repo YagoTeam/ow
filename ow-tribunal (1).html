@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>守望先锋 · 甲级战犯审判所</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #1a1a24;
+    --border: rgba(255,160,0,0.2);
+    --border2: rgba(255,160,0,0.4);
+    --gold: #ffaa00;
+    --gold2: #ffcc55;
+    --red: #ff3355;
+    --red2: #ff6680;
+    --cyan: #00e5ff;
+    --cyan2: #80f0ff;
+    --text: #e8e0d0;
+    --text2: #a09888;
+    --text3: #6a6055;
+    --ss: #ff0055;
+    --s: #ff6600;
+    --a: #ffaa00;
+    --b: #66aaff;
+    --c: #aaaaaa;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,160,0,0.015) 40px, rgba(255,160,0,0.015) 41px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,160,0,0.015) 40px, rgba(255,160,0,0.015) 41px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #root { position: relative; z-index: 1; }
+
+  .header {
+    text-align: center;
+    padding: 24px 16px 16px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(255,100,0,0.08) 0%, transparent 100%);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .header-badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    border: 1px solid var(--border2);
+    padding: 3px 10px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .header h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 4px;
+    line-height: 1.3;
+    text-shadow: 0 0 20px rgba(255,160,0,0.4);
+  }
+
+  .header h1 span { color: var(--red); }
+
+  .header-sub {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    margin-top: 4px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .nav {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 0 8px;
+    gap: 0;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+
+  .nav-btn {
+    flex-shrink: 0;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--text3);
+    background: none;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 1px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+
+  .nav-btn.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  .nav-btn:hover { color: var(--text); }
+
+  .page { padding: 16px; max-width: 520px; margin: 0 auto; }
+
+  /* Upload area */
+  .upload-zone {
+    border: 1.5px dashed var(--border2);
+    border-radius: 8px;
+    padding: 32px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255,160,0,0.03);
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--gold); background: rgba(255,160,0,0.07); }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 36px; margin-bottom: 12px; }
+  .upload-title { font-size: 15px; color: var(--text); font-weight: 500; }
+  .upload-sub { font-size: 12px; color: var(--text3); margin-top: 6px; }
+
+  /* Preview */
+  .img-preview {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin: 12px 0;
+    max-height: 200px;
+    object-fit: cover;
+  }
+
+  /* AI analysis loading */
+  .analyzing {
+    text-align: center;
+    padding: 32px;
+    color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+  }
+  .analyzing-dots::after {
+    content: '';
+    animation: dots 1.5s infinite;
+  }
+  @keyframes dots {
+    0% { content: '.'; }
+    33% { content: '..'; }
+    66% { content: '...'; }
+  }
+
+  /* Rating badge */
+  .rating-ss { color: var(--ss); border-color: var(--ss); text-shadow: 0 0 8px var(--ss); }
+  .rating-s  { color: var(--s);  border-color: var(--s);  text-shadow: 0 0 8px var(--s); }
+  .rating-a  { color: var(--a);  border-color: var(--a);  text-shadow: 0 0 8px var(--a); }
+  .rating-b  { color: var(--b);  border-color: var(--b);  }
+  .rating-c  { color: var(--c);  border-color: var(--c);  }
+
+  .rating-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border: 1px solid;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 3px;
+  }
+
+  /* Criminal card */
+  .criminal-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .criminal-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+  .criminal-card.rank-ss::before { background: var(--ss); box-shadow: 0 0 8px var(--ss); }
+  .criminal-card.rank-s::before  { background: var(--s);  box-shadow: 0 0 8px var(--s);  }
+  .criminal-card.rank-a::before  { background: var(--a);  }
+  .criminal-card.rank-b::before  { background: var(--b);  }
+  .criminal-card.rank-c::before  { background: #666;  }
+
+  .criminal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+
+  .criminal-id {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 16px;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .criminal-meta {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .kda-row {
+    display: flex;
+    gap: 12px;
+    margin: 8px 0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+  }
+
+  .kda-item { display: flex; flex-direction: column; align-items: center; }
+  .kda-label { font-size: 9px; color: var(--text3); letter-spacing: 1px; }
+  .kda-val { font-size: 16px; font-weight: 700; }
+  .kda-k { color: #66ff88; }
+  .kda-d { color: var(--red); }
+  .kda-a { color: var(--cyan); }
+
+  .crime-desc {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.6;
+    margin-top: 8px;
+    font-style: italic;
+    border-left: 2px solid var(--border);
+    padding-left: 10px;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 6px 12px;
+    font-size: 11px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: 'Noto Sans SC', sans-serif;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .btn:hover { border-color: var(--gold); color: var(--gold); }
+  .btn.primary { border-color: var(--gold); color: var(--gold); }
+  .btn.danger { border-color: var(--red); color: var(--red); }
+  .btn.active { background: rgba(255,160,0,0.15); border-color: var(--gold); color: var(--gold); }
+
+  /* Verdict document */
+  .verdict-doc {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 12px 0;
+  }
+
+  .verdict-header {
+    background: linear-gradient(135deg, rgba(255,50,50,0.15), rgba(255,160,0,0.1));
+    padding: 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .verdict-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 6px;
+  }
+
+  .verdict-no {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  .verdict-body { padding: 16px; }
+
+  .verdict-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 13px;
+  }
+  .verdict-row:last-child { border-bottom: none; }
+  .verdict-label { color: var(--text3); }
+  .verdict-val { color: var(--text); font-weight: 500; }
+
+  .verdict-stamp {
+    text-align: center;
+    padding: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .stamp {
+    display: inline-block;
+    border: 3px double;
+    padding: 8px 24px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    transform: rotate(-8deg);
+  }
+
+  /* Diary */
+  .diary-day {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+
+  .diary-date {
+    background: rgba(255,160,0,0.08);
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+
+  .diary-date-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--gold);
+  }
+
+  .diary-count {
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .diary-content { padding: 12px 14px; }
+
+  .diary-section {
+    margin-bottom: 12px;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  .diary-section-title {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text3);
+    margin-bottom: 8px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* Radar */
+  .radar-search {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    margin-bottom: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .radar-search:focus { border-color: var(--gold); }
+  .radar-search::placeholder { color: var(--text3); }
+
+  /* Stats */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+
+  /* Hero gallery */
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text2);
+    margin: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .hero-tag:hover { border-color: var(--gold); color: var(--gold); }
+  .hero-tag .count {
+    background: rgba(255,160,0,0.2);
+    color: var(--gold);
+    border-radius: 10px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* Badge */
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    font-family: 'Share Tech Mono', monospace;
+    margin: 2px;
+  }
+  .badge-repeat { background: rgba(255,100,0,0.2); color: var(--s); border: 1px solid rgba(255,100,0,0.3); }
+  .badge-framed { background: rgba(255,0,50,0.15); color: var(--red); border: 1px solid rgba(255,0,50,0.3); }
+  .badge-suspect { background: rgba(100,180,255,0.15); color: var(--cyan); border: 1px solid rgba(100,180,255,0.3); }
+
+  /* Rage meter */
+  .rage-meter {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin-top: 8px;
+  }
+
+  .rage-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .rage-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+
+  .rage-label { font-size: 10px; color: var(--text3); width: 24px; text-align: right; font-family: 'Share Tech Mono', monospace; }
+
+  /* Notification */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg2);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    z-index: 9999;
+    font-family: 'Share Tech Mono', monospace;
+    animation: slideUp 0.2s ease;
+    max-width: 90vw;
+    text-align: center;
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+  /* Rage slider */
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 13px;
+    padding: 10px;
+    outline: none;
+    resize: none;
+    line-height: 1.6;
+  }
+  textarea:focus { border-color: var(--gold); }
+
+  select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 13px;
+    padding: 8px 10px;
+    outline: none;
+    width: 100%;
+  }
+  select:focus { border-color: var(--gold); }
+
+  input[type=text] {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 8px 10px;
+    outline: none;
+    width: 100%;
+  }
+  input[type=text]:focus { border-color: var(--gold); }
+
+  .form-label {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    margin-top: 12px;
+    display: block;
+  }
+
+  .section-title {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--text3);
+    margin: 20px 0 12px;
+    font-family: 'Share Tech Mono', monospace;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 16px;
+    color: var(--text3);
+    font-size: 13px;
+    line-height: 2;
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+
+  .map-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(0,229,255,0.1);
+    border: 1px solid rgba(0,229,255,0.2);
+    color: var(--cyan);
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .copy-btn {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255,160,0,0.1);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    letter-spacing: 3px;
+    margin-top: 12px;
+    transition: background 0.2s;
+  }
+  .copy-btn:hover { background: rgba(255,160,0,0.2); }
+
+  .scrollable { overflow-y: auto; max-height: 60vh; }
+
+  .manual-form {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-top: 12px;
+  }
+
+  .toggle-btn {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--text3);
+    cursor: pointer;
+    border-radius: 6px;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 13px;
+    margin-top: 8px;
+    transition: all 0.2s;
+  }
+  .toggle-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .verdict-preview {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    margin-top: 12px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    line-height: 2;
+    color: var(--text2);
+    white-space: pre-wrap;
+  }
+
+  .history-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .history-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+  }
+  .history-item:last-child { border-bottom: none; }
+
+  .overflow-hidden { overflow: hidden; }
+  .transition-height { transition: max-height 0.3s ease; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const RATING_COLORS = {
+  SS: '#ff0055', S: '#ff6600', A: '#ffaa00', B: '#66aaff', C: '#aaaaaa'
+};
+const RATING_LABELS = {
+  SS: '需要载入史册', S: '史诗级灾难', A: '甲级战犯', B: '稳定抽象', C: '小坑，可能只是状态不好'
+};
+const RATING_STAMPS = {
+  SS: '永久通缉', S: '史诗灾难', A: '甲级战犯', B: '重点关注', C: '情节较轻'
+};
+
+const HERO_DEPTS = {
+  '源氏': '拔刀即蒸发分部',
+  '安娜': '睡针不存在分部',
+  '半藏': '弓箭散弹分部',
+  '麦克雷': '手速超标分部',
+  '猎空': '永不降落分部',
+  '禅雅塔': '球球全扔分部',
+  '奥丽莎': '独自拔剑分部',
+  '挂壁者': '不会挂壁分部',
+  '末日铁拳': '拳拳落空分部',
+  '巴': '滚进去就滚出来分部',
+};
+
+function getRating(k, d, a) {
+  if (!d || d === 0) {
+    if (k >= 20) return 'C';
+    return 'C';
+  }
+  const kda = (k + a * 0.5) / Math.max(d, 1);
+  if (d >= 20) return 'SS';
+  if (d >= 15) return 'S';
+  if (d >= 10 || kda < 0.5) return 'A';
+  if (d >= 7 || kda < 1.0) return 'B';
+  return 'C';
+}
+
+function getCrimeDesc(hero, k, d, a, rating) {
+  const crimes = {
+    SS: [
+      `被告 ${hero} 场上存活时间约等于开菊花，共计送走 ${d} 次，为敌方奥运奖牌委员会提供全力支持。`,
+      `本场 ${hero} 的表现堪称教科书级别的如何把游戏输掉，${d} 死 ${k} 杀，陪审团一致认为情节十分恶劣。`,
+    ],
+    S: [
+      `${hero} 疑似将复仇之路理解为送人头之路，${d} 死已超出合理范围，责令深刻反省。`,
+      `本场 ${hero} 化身人形战场清洁工，全程为敌方积累终极技能，罪不可赦。`,
+    ],
+    A: [
+      `${hero} 本场表现失常，${d} 死 ${k} 杀，贡献欠佳，认定为甲级战犯，列入重点观察名单。`,
+      `被告驾驶 ${hero} 全程游车河，偶有击杀但不影响输掉比赛的整体走向。`,
+    ],
+    B: [
+      `${hero} 表现不稳定，有明显技术失误，虽罪行未达重判标准，但仍需警告。`,
+      `本场 ${hero} 部分操作令人费解，料为手误，从轻处理，但记录在案。`,
+    ],
+    C: [
+      `${hero} 本场可能只是今天状态差，手感欠佳，酌情考虑从轻，但仍记录存档。`,
+    ],
+  };
+  const list = crimes[rating] || crimes['C'];
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function getJuryComment(rating) {
+  const comments = {
+    SS: ['陪审团当场拍桌', '全场起立表示无语', '书记员已哭晕在厕所', '法官当庭翻桌'],
+    S: ['陪审团集体摇头', '有陪审员摘下眼镜揉眼睛', '旁听席发出叹息'],
+    A: ['陪审团投票：7比0认定有罪', '合议庭认为情节恶劣', '审判长：本席见过很多，但这个...'],
+    B: ['陪审团：确实有点问题', '辩护律师也沉默了', '证据确凿，无从辩驳'],
+    C: ['陪审团：算了，下次别这样', '法官：可能是网差，酌情考虑'],
+  };
+  const list = comments[rating] || comments['C'];
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function getTodayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem('ow_tribunal_v2') || '{"records":[]}'); }
+  catch { return { records: [] }; }
+}
+
+function saveData(data) {
+  localStorage.setItem('ow_tribunal_v2', JSON.stringify(data));
+}
+
+function Toast({ msg, onDone }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2200);
+    return () => clearTimeout(t);
+  }, []);
+  return <div className="toast">{msg}</div>;
+}
+
+function RatingBadge({ rating }) {
+  return (
+    <span className={`rating-badge rating-${rating.toLowerCase()}`}>
+      {rating}
+    </span>
+  );
+}
+
+function CriminalCard({ record, onRevoke, onDelete, onVengeance }) {
+  const [expanded, setExpanded] = useState(false);
+  const ratingColor = RATING_COLORS[record.rating] || '#aaa';
+  const isRevoked = record.revoked;
+
+  return (
+    <div className={`criminal-card rank-${record.rating.toLowerCase()}`} style={isRevoked ? { opacity: 0.5 } : {}}>
+      <div className="criminal-header">
+        <div>
+          <div className="criminal-id">
+            {record.playerId}
+            {record.times > 1 && <span className="badge badge-repeat" style={{marginLeft:8}}>连环×{record.times}</span>}
+            {isRevoked && <span className="badge badge-suspect" style={{marginLeft:8}}>冤案改判</span>}
+          </div>
+          <div className="criminal-meta">
+            {record.date} · {record.map || '未知地图'} · {record.hero}
+            {HERO_DEPTS[record.hero] && <span style={{color:'#ffaa00', marginLeft:4}}>「{HERO_DEPTS[record.hero]}」</span>}
+          </div>
+        </div>
+        <RatingBadge rating={record.rating} />
+      </div>
+
+      <div className="kda-row">
+        <div className="kda-item">
+          <span className="kda-label">KILL</span>
+          <span className="kda-val kda-k">{record.kills}</span>
+        </div>
+        <div className="kda-item" style={{fontSize:20, color:'var(--text3)', alignSelf:'center'}}>／</div>
+        <div className="kda-item">
+          <span className="kda-label">DEATH</span>
+          <span className="kda-val kda-d">{record.deaths}</span>
+        </div>
+        <div className="kda-item" style={{fontSize:20, color:'var(--text3)', alignSelf:'center'}}>／</div>
+        <div className="kda-item">
+          <span className="kda-label">ASSIST</span>
+          <span className="kda-val kda-a">{record.assists}</span>
+        </div>
+        <div style={{marginLeft:'auto', display:'flex', alignItems:'center'}}>
+          {record.rageLevel > 0 && (
+            <span style={{fontSize:11, color:'var(--text3)', fontFamily:'Share Tech Mono, monospace'}}>
+              😤 {record.rageLevel}/10
+            </span>
+          )}
+        </div>
+      </div>
+
+      {!expanded && (
+        <div className="crime-desc" style={{cursor:'pointer'}} onClick={() => setExpanded(true)}>
+          {record.crimeDesc}
+        </div>
+      )}
+
+      {expanded && (
+        <>
+          <div className="crime-desc">{record.crimeDesc}</div>
+          {record.notes && (
+            <div style={{fontSize:12, color:'var(--text2)', marginTop:8, padding:'8px 10px', background:'rgba(255,255,255,0.03)', borderRadius:4}}>
+              📝 {record.notes}
+            </div>
+          )}
+          <div style={{marginTop:10, padding:'10px', background:'var(--bg3)', borderRadius:6}}>
+            <div style={{fontSize:10, color:'var(--text3)', letterSpacing:2, marginBottom:6}}>陪审团意见</div>
+            <div style={{fontSize:12, color:'var(--text2)'}}>{record.juryComment}</div>
+          </div>
+        </>
+      )}
+
+      <div className="card-actions">
+        <button className="btn" onClick={() => setExpanded(!expanded)}>
+          {expanded ? '收起' : '展开详情'}
+        </button>
+        {!isRevoked && (
+          <button className="btn danger" onClick={() => onRevoke(record.id)}>
+            冤案改判
+          </button>
+        )}
+        <button className="btn" onClick={() => onVengeance(record.playerId)}>
+          复仇雷达
+        </button>
+        <button className="btn danger" onClick={() => onDelete(record.id)}>
+          删除
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function UploadAnalyze({ onResult, showToast }) {
+  const [manual, setManual] = useState({ playerId: '', hero: '', kills: '', deaths: '', assists: '', map: '', rageLevel: 5, notes: '' });
+  const [previewRating, setPreviewRating] = useState(null);
+
+  const updateField = (field, val) => {
+    const next = { ...manual, [field]: val };
+    setManual(next);
+    const k = parseInt(next.kills) || 0;
+    const d = parseInt(next.deaths) || 0;
+    const a = parseInt(next.assists) || 0;
+    if (d > 0 || k > 0) setPreviewRating(getRating(k, d, a));
+    else setPreviewRating(null);
+  };
+
+  const submit = () => {
+    if (!manual.playerId.trim()) { showToast('请填写玩家ID'); return; }
+    if (!manual.hero.trim())     { showToast('请填写英雄名称'); return; }
+    const k = parseInt(manual.kills)   || 0;
+    const d = parseInt(manual.deaths)  || 0;
+    const a = parseInt(manual.assists) || 0;
+    const rating      = getRating(k, d, a);
+    const crimeDesc   = getCrimeDesc(manual.hero, k, d, a, rating);
+    const juryComment = getJuryComment(rating);
+    onResult({ ...manual, kills: k, deaths: d, assists: a, rating, crimeDesc, juryComment, map: manual.map || '未知地图' });
+    showToast(`战犯 ${manual.playerId} 已归案！评级 ${rating}`);
+    setManual({ playerId: '', hero: '', kills: '', deaths: '', assists: '', map: '', rageLevel: 5, notes: '' });
+    setPreviewRating(null);
+  };
+
+  const RAGE_EMOJI = ['','😐','😑','🙄','😤','😡','🤬','💢','🤯','👊','💥'];
+  const RAGE_COLOR = ['','#888','#888','#aaa','#ffcc00','#ffaa00','#ff8800','#ff6600','#ff4400','#ff2200','#ff0055'];
+
+  return (
+    <div>
+      <div className="section-title">记录新战犯</div>
+      <div className="manual-form" style={{marginTop:0}}>
+
+        <label className="form-label">玩家 ID *</label>
+        <input type="text" placeholder="输入战犯ID..." value={manual.playerId}
+          onChange={e => updateField('playerId', e.target.value)} />
+
+        <label className="form-label">英雄 *</label>
+        <input type="text" placeholder="源氏、安娜、半藏、麦克雷..." value={manual.hero}
+          onChange={e => updateField('hero', e.target.value)} />
+
+        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginTop:12}}>
+          {[['击杀','kills','K'],['死亡','deaths','D'],['助攻','assists','A']].map(([label,field,ph])=>(
+            <div key={field}>
+              <label className="form-label">{label}</label>
+              <input type="text" inputMode="numeric" placeholder={ph}
+                value={manual[field]}
+                onChange={e => updateField(field, e.target.value)}
+                style={{textAlign:'center'}} />
+            </div>
+          ))}
+        </div>
+
+        {previewRating && (
+          <div style={{
+            display:'flex', alignItems:'center', justifyContent:'space-between',
+            padding:'10px 14px', margin:'12px 0 0',
+            background:`rgba(${previewRating==='SS'?'255,0,85':previewRating==='S'?'255,102,0':previewRating==='A'?'255,170,0':previewRating==='B'?'102,170,255':'170,170,170'},0.1)`,
+            border:`1px solid rgba(${previewRating==='SS'?'255,0,85':previewRating==='S'?'255,102,0':previewRating==='A'?'255,170,0':previewRating==='B'?'102,170,255':'170,170,170'},0.3)`,
+            borderRadius:6
+          }}>
+            <div>
+              <div style={{fontSize:11, color:'var(--text3)', letterSpacing:1, marginBottom:3}}>预判罪行等级</div>
+              <div style={{fontSize:12, color:'var(--text2)'}}>{RATING_LABELS[previewRating]}</div>
+            </div>
+            <RatingBadge rating={previewRating} />
+          </div>
+        )}
+
+        <label className="form-label">地图</label>
+        <input type="text" placeholder="国王大道、王陵、好莱坞..." value={manual.map}
+          onChange={e => updateField('map', e.target.value)} />
+
+        <label className="form-label" style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+          <span>破防指数</span>
+          <span style={{fontFamily:'Share Tech Mono, monospace', color: RAGE_COLOR[manual.rageLevel], fontSize:14}}>
+            {RAGE_EMOJI[manual.rageLevel]} {manual.rageLevel}/10
+          </span>
+        </label>
+        <input type="range" min="1" max="10" step="1" value={manual.rageLevel}
+          onChange={e => updateField('rageLevel', parseInt(e.target.value))} />
+        <div style={{display:'flex', justifyContent:'space-between', fontSize:9, color:'var(--text3)', fontFamily:'Share Tech Mono, monospace', marginTop:4, padding:'0 2px'}}>
+          <span>无所谓</span><span>破大防了</span>
+        </div>
+
+        <label className="form-label">备注 · 你当时的内心独白</label>
+        <textarea rows={2} placeholder="此刻的心情，可留空..." value={manual.notes}
+          onChange={e => updateField('notes', e.target.value)} />
+
+        <button
+          className="btn primary"
+          style={{width:'100%', marginTop:16, padding:'12px 0', fontSize:14, letterSpacing:3, fontFamily:'Noto Serif SC, serif'}}
+          onClick={submit}
+        >
+          ⚖️ 宣判归档
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function VerdictDoc({ record, onClose }) {
+  if (!record) return null;
+  const verdictNo = `OW-${record.date.replace(/-/g,'')}-${String(record.id).padStart(4,'0')}`;
+  const docText = `【守望先锋甲级战犯审判所】
+判决书编号：${verdictNo}
+
+被告：${record.playerId}
+主要罪行：于 ${record.map} 驾驶 ${record.hero}
+        造成 ${record.deaths} 次不必要阵亡
+        仅完成 ${record.kills} 次击杀及 ${record.assists} 次助攻
+
+犯罪等级：${record.rating}级 ——「${RATING_LABELS[record.rating]}」
+
+罪状描述：
+${record.crimeDesc}
+
+陪审团意见：${record.juryComment}
+
+量刑结果：${RATING_STAMPS[record.rating]}
+
+案发时间：${record.date}
+本判决书由守望先锋甲级战犯审判所依法出具。`;
+
+  return (
+    <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:500, display:'flex', alignItems:'center', justifyContent:'center', padding:16}}>
+      <div style={{background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:8, width:'100%', maxWidth:420, maxHeight:'90vh', overflow:'auto'}}>
+        <div className="verdict-header">
+          <div className="verdict-title">判 决 书</div>
+          <div className="verdict-no">{verdictNo}</div>
+        </div>
+        <div className="verdict-body">
+          <div className="verdict-row"><span className="verdict-label">被告</span><span className="verdict-val" style={{fontFamily:'Share Tech Mono, monospace'}}>{record.playerId}</span></div>
+          <div className="verdict-row"><span className="verdict-label">驾驶英雄</span><span className="verdict-val">{record.hero}</span></div>
+          <div className="verdict-row"><span className="verdict-label">KDA</span><span className="verdict-val" style={{fontFamily:'Share Tech Mono, monospace'}}>{record.kills} / <span style={{color:'var(--red)'}}>{record.deaths}</span> / {record.assists}</span></div>
+          <div className="verdict-row"><span className="verdict-label">案发地图</span><span className="verdict-val"><span className="map-badge">{record.map}</span></span></div>
+          <div className="verdict-row"><span className="verdict-label">案发时间</span><span className="verdict-val">{record.date}</span></div>
+          <div className="verdict-row"><span className="verdict-label">犯罪等级</span><span className="verdict-val"><RatingBadge rating={record.rating} /></span></div>
+          <div style={{padding:'12px 0', fontSize:12, color:'var(--text2)', lineHeight:1.8, borderTop:'1px solid var(--border)', marginTop:8}}>
+            {record.crimeDesc}
+          </div>
+          <div style={{fontSize:12, color:'var(--text3)', fontStyle:'italic'}}>
+            陪审团：{record.juryComment}
+          </div>
+        </div>
+        <div className="verdict-stamp">
+          <div className={`stamp rating-${record.rating.toLowerCase()}`}>
+            {RATING_STAMPS[record.rating]}
+          </div>
+        </div>
+        <div style={{padding:14, display:'flex', gap:8}}>
+          <button className="copy-btn" style={{flex:1, fontSize:13, letterSpacing:1}} onClick={() => { navigator.clipboard?.writeText(docText); }}>
+            复制判决书文本
+          </button>
+          <button className="btn" style={{padding:'12px 16px'}} onClick={onClose}>关闭</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DiaryPage({ records }) {
+  const byDate = {};
+  records.forEach(r => {
+    if (!byDate[r.date]) byDate[r.date] = [];
+    byDate[r.date].push(r);
+  });
+  const dates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+  const [openDates, setOpenDates] = useState({ [getTodayStr()]: true });
+
+  if (dates.length === 0) return (
+    <div className="empty-state">
+      <div className="empty-icon">📔</div>
+      <div>鞭尸日记尚无记录</div>
+      <div style={{color:'var(--text3)'}}>先去归档几个战犯吧</div>
+    </div>
+  );
+
+  return (
+    <div>
+      {dates.map(date => {
+        const dayRecords = byDate[date];
+        const isOpen = openDates[date];
+        const worstByDeath = [...dayRecords].sort((a, b) => b.deaths - a.deaths)[0];
+        const bestKda = [...dayRecords].sort((a, b) => {
+          const kdaA = (a.kills + a.assists * 0.5) / Math.max(a.deaths, 1);
+          const kdaB = (b.kills + b.assists * 0.5) / Math.max(b.deaths, 1);
+          return kdaB - kdaA;
+        })[0];
+        const ssCount = dayRecords.filter(r => ['SS','S','A'].includes(r.rating)).length;
+
+        return (
+          <div key={date} className="diary-day">
+            <div className="diary-date" onClick={() => setOpenDates(p => ({...p, [date]: !p[date]}))}>
+              <span className="diary-date-text">{date}</span>
+              <span className="diary-count">{dayRecords.length} 案 · {ssCount} 重犯 {isOpen ? '▲' : '▼'}</span>
+            </div>
+            {isOpen && (
+              <div className="diary-content">
+                <div className="diary-section" style={{borderColor:'rgba(255,50,50,0.3)', background:'rgba(255,50,50,0.05)'}}>
+                  <div className="diary-section-title">🔥 今日最大战犯</div>
+                  <div style={{fontFamily:'Share Tech Mono, monospace', fontSize:14, color:'var(--text)'}}>
+                    {worstByDeath.playerId}
+                  </div>
+                  <div style={{fontSize:11, color:'var(--text3)', marginTop:4}}>
+                    {worstByDeath.hero} · {worstByDeath.kills}/{worstByDeath.deaths}/{worstByDeath.assists} · <RatingBadge rating={worstByDeath.rating} />
+                  </div>
+                </div>
+                {bestKda && bestKda.playerId !== worstByDeath.playerId && (
+                  <div className="diary-section" style={{borderColor:'rgba(0,229,255,0.3)', background:'rgba(0,229,255,0.03)'}}>
+                    <div className="diary-section-title">⚖️ 今日冤案候选</div>
+                    <div style={{fontFamily:'Share Tech Mono, monospace', fontSize:14, color:'var(--text)'}}>
+                      {bestKda.playerId}
+                    </div>
+                    <div style={{fontSize:11, color:'var(--text3)', marginTop:4}}>
+                      {bestKda.hero} · {bestKda.kills}/{bestKda.deaths}/{bestKda.assists} · 也许只是环境受害者
+                    </div>
+                  </div>
+                )}
+                <div className="diary-section" style={{borderColor:'rgba(255,255,100,0.2)', background:'rgba(255,255,100,0.03)'}}>
+                  <div className="diary-section-title">🪞 今日我也有问题</div>
+                  <div style={{fontSize:12, color:'var(--text2)', lineHeight:1.8}}>
+                    {dayRecords.some(r => r.rageLevel >= 8)
+                      ? `破防指数飙升至 ${Math.max(...dayRecords.map(r => r.rageLevel||0))}，请反思自己是否也受到情绪影响而发挥失常。`
+                      : `今天心态相对稳定，继续保持理性复盘态度。`
+                    }
+                  </div>
+                </div>
+                <div>
+                  {dayRecords.map(r => (
+                    <div key={r.id} className="history-item">
+                      <div className="history-dot" style={{background: RATING_COLORS[r.rating], marginTop:4}}></div>
+                      <div style={{flex:1}}>
+                        <span style={{fontFamily:'Share Tech Mono, monospace', fontSize:13}}>{r.playerId}</span>
+                        <span style={{fontSize:11, color:'var(--text3)', marginLeft:8}}>{r.hero} {r.kills}/{r.deaths}/{r.assists}</span>
+                        <RatingBadge rating={r.rating} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function RadarPage({ records, searchInit }) {
+  const [query, setQuery] = useState(searchInit || '');
+  const results = query.trim()
+    ? records.filter(r => r.playerId.toLowerCase().includes(query.toLowerCase().trim()))
+    : [];
+
+  const grouped = {};
+  results.forEach(r => {
+    if (!grouped[r.playerId]) grouped[r.playerId] = [];
+    grouped[r.playerId].push(r);
+  });
+
+  return (
+    <div>
+      <div className="section-title">复仇雷达</div>
+      <input
+        className="radar-search"
+        type="text"
+        placeholder="输入玩家ID搜索历史记录..."
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        autoFocus={!!searchInit}
+      />
+
+      {query && Object.keys(grouped).length === 0 && (
+        <div className="empty-state">
+          <div className="empty-icon">🔍</div>
+          <div>未找到「{query}」的犯罪记录</div>
+          <div style={{color:'var(--text3)'}}>该玩家尚未被记录，或许只是还没遇到</div>
+        </div>
+      )}
+
+      {Object.entries(grouped).map(([pid, playerRecords]) => {
+        const worstRating = (['SS','S','A','B','C'].find(r => playerRecords.some(rec => rec.rating === r))) || 'C';
+        return (
+          <div key={pid} style={{marginBottom:16}}>
+            <div style={{
+              padding:'12px 14px',
+              background:'var(--bg2)',
+              border:'1px solid var(--border)',
+              borderRadius:'8px 8px 0 0',
+              borderBottom:'none',
+              display:'flex',
+              justifyContent:'space-between',
+              alignItems:'center'
+            }}>
+              <div>
+                <div style={{fontFamily:'Share Tech Mono, monospace', fontSize:16, color:'var(--text)'}}>{pid}</div>
+                <div style={{fontSize:11, color:'var(--text3)', marginTop:2}}>
+                  前科 {playerRecords.length} 次 · 最高等级 <RatingBadge rating={worstRating} />
+                </div>
+              </div>
+              {playerRecords.length >= 3 && <span className="badge badge-repeat">惯犯</span>}
+            </div>
+            {playerRecords.map((r, i) => (
+              <div key={r.id} style={{
+                padding:'10px 14px',
+                background:'var(--bg3)',
+                border:'1px solid var(--border)',
+                borderTop: i===0 ? '1px solid var(--border2)' : '1px solid rgba(255,255,255,0.04)',
+                borderRadius: i === playerRecords.length-1 ? '0 0 8px 8px' : 0,
+                fontSize:12,
+                color:'var(--text2)',
+                display:'flex',
+                justifyContent:'space-between',
+                alignItems:'center'
+              }}>
+                <div>
+                  <span style={{fontFamily:'Share Tech Mono, monospace', color:'var(--text3)', marginRight:8}}>{r.date}</span>
+                  {r.hero} {r.kills}/{r.deaths}/{r.assists}
+                  {r.map && <span style={{marginLeft:6}} className="map-badge">{r.map}</span>}
+                </div>
+                <RatingBadge rating={r.rating} />
+              </div>
+            ))}
+            {playerRecords.length >= 2 && (
+              <div style={{
+                padding:'8px 14px',
+                background:'rgba(255,100,0,0.06)',
+                border:'1px solid rgba(255,100,0,0.2)',
+                borderTop:'none',
+                borderRadius:'0 0 8px 8px',
+                fontSize:11,
+                color:'var(--s)',
+                fontStyle:'italic'
+              }}>
+                ⚠️ 此人曾 {playerRecords.length} 次出现在你的对局记录中，请保持高度警惕。
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {!query && (
+        <div>
+          <div className="section-title">高频战犯图鉴</div>
+          {(() => {
+            const freq = {};
+            records.forEach(r => { freq[r.playerId] = (freq[r.playerId]||0)+1; });
+            return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([pid, cnt]) => (
+              <div key={pid} className="history-item" onClick={() => setQuery(pid)} style={{cursor:'pointer', padding:'10px 0'}}>
+                <div className="history-dot" style={{background: RATING_COLORS[records.find(r=>r.playerId===pid)?.rating]||'#666', marginTop:4}}></div>
+                <div style={{flex:1}}>
+                  <span style={{fontFamily:'Share Tech Mono, monospace', fontSize:13}}>{pid}</span>
+                  <span className="badge badge-repeat" style={{marginLeft:8}}>×{cnt}</span>
+                </div>
+                <span style={{fontSize:11, color:'var(--text3)'}}>点击查看 →</span>
+              </div>
+            ));
+          })()}
+          {records.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-icon">📡</div>
+              <div>雷达范围内暂无战犯</div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatsPage({ records }) {
+  if (records.length === 0) return (
+    <div className="empty-state">
+      <div className="empty-icon">📊</div>
+      <div>暂无数据</div>
+      <div style={{color:'var(--text3)'}}>记录更多战犯后开启年度审判</div>
+    </div>
+  );
+
+  const ratingCount = { SS:0, S:0, A:0, B:0, C:0 };
+  records.forEach(r => ratingCount[r.rating] = (ratingCount[r.rating]||0)+1);
+
+  const heroCount = {};
+  records.forEach(r => heroCount[r.hero] = (heroCount[r.hero]||0)+1);
+  const topHeroes = Object.entries(heroCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  const mapCount = {};
+  records.forEach(r => { if(r.map && r.map!=='未知地图') mapCount[r.map] = (mapCount[r.map]||0)+1; });
+  const topMap = Object.entries(mapCount).sort((a,b)=>b[1]-a[1])[0];
+
+  const avgRage = records.filter(r=>r.rageLevel>0).reduce((s,r)=>s+r.rageLevel,0) / (records.filter(r=>r.rageLevel>0).length||1);
+
+  const worstHeroEntry = topHeroes[0];
+
+  const totalDeaths = records.reduce((s,r)=>s+(parseInt(r.deaths)||0),0);
+
+  return (
+    <div>
+      <div className="section-title">年度审判 · 数据看板</div>
+
+      <div className="stat-grid">
+        <div className="stat-card">
+          <div className="stat-num">{records.length}</div>
+          <div className="stat-label">归案总人数</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-num" style={{color:'var(--red)'}}>{totalDeaths}</div>
+          <div className="stat-label">记录总死亡次数</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-num" style={{color:'var(--ss)'}}>{ratingCount.SS + ratingCount.S}</div>
+          <div className="stat-label">SS+S级重犯</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-num" style={{color:'var(--cyan)'}}>{avgRage.toFixed(1)}</div>
+          <div className="stat-label">平均破防指数</div>
+        </div>
+      </div>
+
+      <div className="section-title">罪行分布</div>
+      {['SS','S','A','B','C'].map(r => (
+        <div key={r} style={{display:'flex', alignItems:'center', gap:10, marginBottom:10}}>
+          <span className={`rating-badge rating-${r.toLowerCase()}`} style={{width:32, textAlign:'center'}}>{r}</span>
+          <div className="rage-bar-wrap" style={{flex:1}}>
+            <div className="rage-bar-fill" style={{
+              width: `${records.length ? (ratingCount[r]||0)/records.length*100 : 0}%`,
+              background: RATING_COLORS[r]
+            }}></div>
+          </div>
+          <span style={{fontSize:12, color:'var(--text3)', fontFamily:'Share Tech Mono, monospace', width:28}}>{ratingCount[r]||0}</span>
+        </div>
+      ))}
+
+      <div className="section-title">最常坑你的英雄</div>
+      <div style={{display:'flex', flexWrap:'wrap', marginBottom:8}}>
+        {topHeroes.map(([hero, cnt]) => (
+          <span key={hero} className="hero-tag">
+            {hero}
+            <span className="count">{cnt}</span>
+          </span>
+        ))}
+      </div>
+
+      {topMap && (
+        <>
+          <div className="section-title">最容易破防的地图</div>
+          <div style={{padding:'12px 14px', background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:8, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+            <span className="map-badge" style={{fontSize:14}}>{topMap[0]}</span>
+            <span style={{fontSize:12, color:'var(--text3)'}}>已在此地图记录 {topMap[1]} 名战犯</span>
+          </div>
+        </>
+      )}
+
+      <div className="section-title">冤假错案统计</div>
+      <div style={{padding:'12px 14px', background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:8, fontSize:13, color:'var(--text2)'}}>
+        共改判冤案 <span style={{color:'var(--cyan)', fontFamily:'Share Tech Mono, monospace'}}>{records.filter(r=>r.revoked).length}</span> 起 ·
+        冤案率 <span style={{color:'var(--cyan)', fontFamily:'Share Tech Mono, monospace'}}>{records.length ? ((records.filter(r=>r.revoked).length/records.length)*100).toFixed(0) : 0}%</span>
+        <div style={{fontSize:11, color:'var(--text3)', marginTop:6}}>你的正义感评分：{records.filter(r=>r.revoked).length >= 3 ? '🌟 良好，懂得反思' : '⚠️ 尚待提升，要学会反思'}</div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [tab, setTab] = useState('archive');
+  const [data, setData] = useState(loadData);
+  const [toast, setToast] = useState(null);
+  const [verdictTarget, setVerdictTarget] = useState(null);
+  const [radarSearch, setRadarSearch] = useState('');
+
+  const showToast = (msg) => setToast(msg);
+
+  const updateData = (newData) => {
+    setData(newData);
+    saveData(newData);
+  };
+
+  const addRecord = (playerInfo) => {
+    const { playerId, hero, kills, deaths, assists, rating, crimeDesc, juryComment, map, rageLevel, notes } = playerInfo;
+    const existingTimes = data.records.filter(r => r.playerId === playerId).length;
+    const id = Date.now();
+    const newRecord = {
+      id,
+      playerId,
+      hero,
+      kills: parseInt(kills)||0,
+      deaths: parseInt(deaths)||0,
+      assists: parseInt(assists)||0,
+      rating,
+      crimeDesc,
+      juryComment,
+      map,
+      rageLevel: parseInt(rageLevel)||5,
+      notes,
+      date: getTodayStr(),
+      times: existingTimes + 1,
+      revoked: false,
+    };
+    updateData({ records: [newRecord, ...data.records] });
+  };
+
+  const revokeRecord = (id) => {
+    updateData({ records: data.records.map(r => r.id === id ? {...r, revoked: true} : r) });
+    showToast('已改判为冤案');
+  };
+
+  const deleteRecord = (id) => {
+    updateData({ records: data.records.filter(r => r.id !== id) });
+    showToast('记录已删除');
+  };
+
+  const goVengeance = (playerId) => {
+    setRadarSearch(playerId);
+    setTab('radar');
+  };
+
+  const tabs = [
+    { id: 'archive', label: '🗃️ 归案' },
+    { id: 'diary', label: '📔 日记' },
+    { id: 'radar', label: '📡 雷达' },
+    { id: 'stats', label: '📊 统计' },
+  ];
+
+  return (
+    <div>
+      <div className="header">
+        <div className="header-badge">OVERWATCH · TRIBUNAL</div>
+        <h1>守望先锋<br/><span>甲级战犯</span>审判所</h1>
+        <div className="header-sub">私人案件档案系统 · 仅供娱乐</div>
+      </div>
+
+      <div className="nav">
+        {tabs.map(t => (
+          <button key={t.id} className={`nav-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="page">
+        {tab === 'archive' && (
+          <div>
+            <UploadAnalyze onResult={addRecord} showToast={showToast} />
+            <div className="section-title">战犯档案 · {data.records.length} 案在案</div>
+            {data.records.length === 0 && (
+              <div className="empty-state">
+                <div className="empty-icon">⚖️</div>
+                <div>案件档案室空无一人</div>
+                <div style={{color:'var(--text3)'}}>上传截图或手动记录开始归档</div>
+              </div>
+            )}
+            {data.records.map(r => (
+              <CriminalCard
+                key={r.id}
+                record={r}
+                onRevoke={revokeRecord}
+                onDelete={deleteRecord}
+                onVengeance={goVengeance}
+              />
+            ))}
+            {verdictTarget && (
+              <VerdictDoc record={verdictTarget} onClose={() => setVerdictTarget(null)} />
+            )}
+          </div>
+        )}
+
+        {tab === 'diary' && <DiaryPage records={data.records} />}
+
+        {tab === 'radar' && (
+          <RadarPage records={data.records} searchInit={radarSearch} />
+        )}
+
+        {tab === 'stats' && <StatsPage records={data.records} />}
+      </div>
+
+      {toast && <Toast msg={toast} onDone={() => setToast(null)} />}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
